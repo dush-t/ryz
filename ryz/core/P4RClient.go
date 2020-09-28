@@ -1,14 +1,30 @@
 package core
 
 import (
+	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
-// P4RClient represents a p4Runtime client
+// P4RClient represents a p4Runtime client. Most methods are just getters since Go's
+// interface implementation does not allow non-function members
 type P4RClient interface {
 	// To initialize the client
-	Init()
+	Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, electionID p4V1.Uint128) error
 
-	// Used to request information from the stream channel
-	RequestFromStream(p4V1.StreamMessageRequest)
+	// Run will do whatever is needed to ensure that the client is active
+	// once it is initialized.
+	Run()
+
+	// GetMessageChannels will return the message channels used by the client
+	GetMessageChannels() MessageChannels
+
+	// GetArbitrationData will return the data required to perform arbitration
+	// for the client
+	GetArbitrationData() ArbitrationData
+
+	// GetStreamChannel will return the StreamChannel instance associated with the client
+	GetStreamChannel() p4V1.P4Runtime_StreamChannelClient
+
+	// P4Info will return the P4Info struct associated to the client
+	P4Info() *p4ConfigV1.P4Info
 }
