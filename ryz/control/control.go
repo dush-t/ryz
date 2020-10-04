@@ -12,8 +12,6 @@ import (
 // I could not think of a better name
 type SimpleControl struct {
 	Client             core.P4RClient
-	ArbitrationDone    bool
-	IsMaster           bool
 	DigestChannel      chan *p4V1.StreamMessageResponse_Digest
 	ArbitrationChannel chan *p4V1.StreamMessageResponse_Arbitration
 }
@@ -37,4 +35,27 @@ func (sc *SimpleControl) StartMessageRouter() {
 			}
 		}
 	}()
+}
+
+// Table will return a TableControl struct
+func (sc *SimpleControl) Table(tableName string) TableControl {
+	tables := *(sc.Client.GetEntities(core.EntityTypes.TABLE))
+	table := tables[tableName].(*core.Table)
+
+	return TableControl{
+		table:   table,
+		control: sc,
+	}
+}
+
+// SetMastershipStatus will call a method of the same name on P4RClient.
+// We need to keep track of mastership to reason about which control can be
+// used for what.
+func (sc *SimpleControl) SetMastershipStatus(status bool) {
+	sc.Client.SetMastershipStatus(status)
+}
+
+// IsMaster will return true if the control has mastership
+func (sc *SimpleControl) IsMaster() bool {
+	return sc.Client.IsMaster()
 }

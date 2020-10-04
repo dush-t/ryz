@@ -30,12 +30,11 @@ func (sc *SimpleControl) ListenForArbitrationUpdates() {
 	go func() {
 		update := <-sc.ArbitrationChannel
 		if update.Arbitration.Status.Code != int32(code.Code_OK) {
-			sc.IsMaster = false
+			sc.SetMastershipStatus(false)
 			log.Println("Arbitration was done. Control did not acquire mastership.")
 		} else {
-			sc.IsMaster = true
+			sc.SetMastershipStatus(true)
 			log.Println("Arbitration was done. Control acquired mastership")
 		}
-		sc.ArbitrationDone = true
 	}()
 }

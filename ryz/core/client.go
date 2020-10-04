@@ -9,15 +9,23 @@ import (
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
+// Entity represents a P4 Entity
+type Entity interface {
+	Type() EntityType
+	GetID() uint32
+}
+
 // Client contains all the information required to handle a client
 type Client struct {
 	p4V1.P4RuntimeClient
 	deviceID               uint64
+	isMaster               bool
 	electionID             p4V1.Uint128
 	p4Info                 *p4ConfigV1.P4Info
 	IncomingMessageChannel chan *p4V1.StreamMessageResponse
 	OutgoingMessageChannel chan *p4V1.StreamMessageRequest
 	streamChannel          p4V1.P4Runtime_StreamChannelClient
+	Entities               map[EntityType]*(map[string]Entity)
 }
 
 // Init will create a new gRPC connection and initialize the client
@@ -32,12 +40,29 @@ func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, e
 	streamMsgs := make(chan *p4V1.StreamMessageResponse, 20)
 	pushMsgs := make(chan *p4V1.StreamMessageRequest, 20)
 
+	Tables := make(map[string]Entity)
+	for _, table := range p4Info.Tables {
+		t := GetTable(table)
+		Tables[table.Preamble.Name] = Entity(&t)
+	}
+
+	Actions := make(map[string]Entity)
+	for _, action := range p4Info.Actions {
+		a := GetAction(action)
+		Actions[action.Preamble.Name] = Entity(&a)
+	}
+
+	Entities := make(map[EntityType]*(map[string]Entity))
+	Entities[EntityTypes.TABLE] = &Tables
+	Entities[EntityTypes.ACTION] = &Actions
+
 	c.P4RuntimeClient = p4RtC
 	c.deviceID = deviceID
 	c.electionID = electionID
 	c.p4Info = p4Info
 	c.IncomingMessageChannel = streamMsgs
 	c.OutgoingMessageChannel = pushMsgs
+	c.Entities = Entities
 
 	stream, streamInitErr := c.StreamChannel(context.Background())
 	if streamInitErr != nil {
@@ -54,6 +79,39 @@ func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, e
 func (c *Client) Run() {
 	c.StartMessageChannels()
 }
+
+// NewClient will create a new P4 Runtime Client
+func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (P4RClient, error) {
+	p4Info, err := getP4Info(p4InfoPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var client *Client
+	initErr := client.Init(addr, p4Info, deviceID, electionID)
+	if initErr != nil {
+		return nil, initErr
+	}
+
+	return client, nil
+}
+
+// WriteUpdate is used to update an entity on the
+// switch. Refer to the P4Runtime spec to know more.
+func (c *Client) WriteUpdate(update *p4V1.Update) error {
+	req := &p4V1.WriteRequest{
+		DeviceId:   c.deviceID,
+		ElectionId: &c.electionID,
+		Updates:    []*p4V1.Update{update},
+	}
+
+	_, err := c.Write(context.Background(), req)
+	return err
+}
+
+/*
+	Getters and Setters beyond this point
+*/
 
 // GetMessageChannels will return the message channels used by the client
 func (c *Client) GetMessageChannels() MessageChannels {
@@ -82,18 +140,17 @@ func (c *Client) P4Info() *p4ConfigV1.P4Info {
 	return c.p4Info
 }
 
-// NewClient will create a new P4 Runtime Client
-func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (P4RClient, error) {
-	p4Info, err := getP4Info(p4InfoPath)
-	if err != nil {
-		return nil, err
-	}
+// IsMaster returns true if the client is master
+func (c *Client) IsMaster() bool {
+	return c.isMaster
+}
 
-	var client *Client
-	initErr := client.Init(addr, p4Info, deviceID, electionID)
-	if initErr != nil {
-		return nil, initErr
-	}
+// SetMastershipStatus sets the mastership status of the client
+func (c *Client) SetMastershipStatus(status bool) {
+	c.isMaster = status
+}
 
-	return client, nil
+// GetEntities will return the Entities that the client has
+func (c *Client) GetEntities(EntityType EntityType) *map[string]Entity {
+	return c.Entities[EntityType]
 }
