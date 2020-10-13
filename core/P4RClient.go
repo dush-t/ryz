@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/dush-t/ryz/core/entities"
 	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
@@ -8,7 +9,7 @@ import (
 // EntityClient defines any client that can interact with P4 switch entities such
 // as tables, actions, counters, etc
 type EntityClient interface {
-	GetEntities(EntityType) *map[string]Entity
+	GetEntities(entities.EntityType) *map[string]entities.Entity
 }
 
 // P4RClient represents a p4Runtime client. Most methods are just getters since Go's

@@ -3,7 +3,8 @@ package control
 import (
 	"log"
 
-	"github.com/dush-t/ryz/ryz/core"
+	"github.com/dush-t/ryz/core"
+	"github.com/dush-t/ryz/core/entities"
 
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
@@ -39,8 +40,8 @@ func (sc *SimpleControl) StartMessageRouter() {
 
 // Table will return a TableControl struct
 func (sc *SimpleControl) Table(tableName string) TableControl {
-	tables := *(sc.Client.GetEntities(core.EntityTypes.TABLE))
-	table := tables[tableName].(*core.Table)
+	tables := *(sc.Client.GetEntities(entities.EntityTypes.TABLE))
+	table := tables[tableName].(*entities.Table)
 
 	return TableControl{
 		table:   table,

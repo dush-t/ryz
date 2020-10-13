@@ -3,17 +3,12 @@ package core
 import (
 	"context"
 
+	"github.com/dush-t/ryz/core/entities"
 	"google.golang.org/grpc"
 
 	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
-
-// Entity represents a P4 Entity
-type Entity interface {
-	Type() EntityType
-	GetID() uint32
-}
 
 // Client contains all the information required to handle a client
 type Client struct {
@@ -25,7 +20,7 @@ type Client struct {
 	IncomingMessageChannel chan *p4V1.StreamMessageResponse
 	OutgoingMessageChannel chan *p4V1.StreamMessageRequest
 	streamChannel          p4V1.P4Runtime_StreamChannelClient
-	Entities               map[EntityType]*(map[string]Entity)
+	Entities               map[entities.EntityType]*(map[string]entities.Entity)
 }
 
 // Init will create a new gRPC connection and initialize the client
@@ -40,21 +35,21 @@ func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, e
 	streamMsgs := make(chan *p4V1.StreamMessageResponse, 20)
 	pushMsgs := make(chan *p4V1.StreamMessageRequest, 20)
 
-	Tables := make(map[string]Entity)
+	Tables := make(map[string]entities.Entity)
 	for _, table := range p4Info.Tables {
-		t := GetTable(table)
-		Tables[table.Preamble.Name] = Entity(&t)
+		t := entities.GetTable(table)
+		Tables[table.Preamble.Name] = entities.Entity(&t)
 	}
 
-	Actions := make(map[string]Entity)
+	Actions := make(map[string]entities.Entity)
 	for _, action := range p4Info.Actions {
-		a := GetAction(action)
-		Actions[action.Preamble.Name] = Entity(&a)
+		a := entities.GetAction(action)
+		Actions[action.Preamble.Name] = entities.Entity(&a)
 	}
 
-	Entities := make(map[EntityType]*(map[string]Entity))
-	Entities[EntityTypes.TABLE] = &Tables
-	Entities[EntityTypes.ACTION] = &Actions
+	Entities := make(map[entities.EntityType]*(map[string]entities.Entity))
+	Entities[entities.EntityTypes.TABLE] = &Tables
+	Entities[entities.EntityTypes.ACTION] = &Actions
 
 	c.P4RuntimeClient = p4RtC
 	c.deviceID = deviceID
@@ -151,6 +146,6 @@ func (c *Client) SetMastershipStatus(status bool) {
 }
 
 // GetEntities will return the Entities that the client has
-func (c *Client) GetEntities(EntityType EntityType) *map[string]Entity {
+func (c *Client) GetEntities(EntityType entities.EntityType) *map[string]entities.Entity {
 	return c.Entities[EntityType]
 }

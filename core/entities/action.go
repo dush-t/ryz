@@ -1,4 +1,4 @@
-package core
+package entities
 
 import (
 	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"

@@ -1,4 +1,4 @@
-package core
+package entities
 
 import (
 	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"
@@ -59,19 +59,21 @@ func (m *LpmMatch) get(ID uint32) *p4V1.FieldMatch {
 	return mf
 }
 
+// TableEntryTransformer can be registered with a table to convert json data
+// into data compatible with the p4runtime protobuf spec.
+type TableEntryTransformer func(map[string]interface{}) ([]Match, [][]byte)
+
 // Table represents a table Entity
 type Table struct {
-	ID   uint32
-	Name string
+	ID          uint32
+	Name        string
+	Transformer TableEntryTransformer
 }
 
-// InsertEntry will insert a table entry in the P4 device
-func (t *Table) InsertEntry(c P4RClient, actionName string, mfs []Match, params [][]byte) error {
-	actions := *(c.GetEntities(EntityTypes.ACTION))
-	action := actions[actionName].(*Action)
-
+// InsertEntryMessage will insert a table entry in the P4 device
+func (t *Table) InsertEntryMessage(actionID uint32, mfs []Match, params [][]byte) *p4V1.Update {
 	directAction := &p4V1.Action{
-		ActionId: action.ID,
+		ActionId: actionID,
 	}
 
 	for idx, p := range params {
@@ -109,7 +111,7 @@ func (t *Table) InsertEntry(c P4RClient, actionName string, mfs []Match, params 
 		},
 	}
 
-	return c.WriteUpdate(update)
+	return update
 }
 
 // Type returns the type of the Entity represented by Table,
@@ -121,6 +123,12 @@ func (t *Table) Type() EntityType {
 // GetID will return the ID of the table Entity
 func (t *Table) GetID() uint32 {
 	return t.ID
+}
+
+// RegisterTransformer will set the provided transformer to be used for
+// a table entity.
+func (t *Table) RegisterTransformer(transformer TableEntryTransformer) {
+	t.Transformer = transformer
 }
 
 // GetTable will return a new table from a derived from a P4Info table

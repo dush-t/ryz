@@ -1,4 +1,4 @@
-package core
+package entities
 
 // EntityType is just an alias type to hide the actual enum value
 type EntityType string
