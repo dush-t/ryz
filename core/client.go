@@ -101,7 +101,7 @@ func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128
 		return nil, err
 	}
 
-	var client *Client
+	client := &Client{}
 	initErr := client.Init(addr, p4Info, deviceID, electionID)
 	if initErr != nil {
 		return nil, initErr
