@@ -24,9 +24,9 @@ func (sc *SimpleControl) PerformArbitration() {
 	outChan <- request
 }
 
-// ListenForArbitrationUpdates will start a goroutine to listen on the
+// StartArbitrationUpdateListener will start a goroutine to listen on the
 // ArbitrationChannel to check for any updates in arbitration
-func (sc *SimpleControl) ListenForArbitrationUpdates() {
+func (sc *SimpleControl) StartArbitrationUpdateListener() {
 	go func() {
 		update := <-sc.ArbitrationChannel
 		if update.Arbitration.Status.Code != int32(code.Code_OK) {

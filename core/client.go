@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"log"
 
 	"github.com/dush-t/ryz/core/entities"
 	"google.golang.org/grpc"
@@ -31,6 +32,11 @@ func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, e
 	}
 
 	p4RtC := p4V1.NewP4RuntimeClient(conn)
+	resp, err := p4RtC.Capabilities(context.Background(), &p4V1.CapabilitiesRequest{})
+	if err != nil {
+		log.Fatal("Error in capabilities RPC", err)
+	}
+	log.Println("P4Runtime server version is", resp.P4RuntimeApiVersion)
 
 	streamMsgs := make(chan *p4V1.StreamMessageResponse, 20)
 	pushMsgs := make(chan *p4V1.StreamMessageRequest, 20)
@@ -75,6 +81,19 @@ func (c *Client) Run() {
 	c.StartMessageChannels()
 }
 
+// WriteUpdate is used to update an entity on the
+// switch. Refer to the P4Runtime spec to know more.
+func (c *Client) WriteUpdate(update *p4V1.Update) error {
+	req := &p4V1.WriteRequest{
+		DeviceId:   c.deviceID,
+		ElectionId: &c.electionID,
+		Updates:    []*p4V1.Update{update},
+	}
+
+	_, err := c.Write(context.Background(), req)
+	return err
+}
+
 // NewClient will create a new P4 Runtime Client
 func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (P4RClient, error) {
 	p4Info, err := getP4Info(p4InfoPath)
@@ -89,19 +108,6 @@ func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128
 	}
 
 	return client, nil
-}
-
-// WriteUpdate is used to update an entity on the
-// switch. Refer to the P4Runtime spec to know more.
-func (c *Client) WriteUpdate(update *p4V1.Update) error {
-	req := &p4V1.WriteRequest{
-		DeviceId:   c.deviceID,
-		ElectionId: &c.electionID,
-		Updates:    []*p4V1.Update{update},
-	}
-
-	_, err := c.Write(context.Background(), req)
-	return err
 }
 
 /*

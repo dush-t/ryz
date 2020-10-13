@@ -60,3 +60,41 @@ func (sc *SimpleControl) SetMastershipStatus(status bool) {
 func (sc *SimpleControl) IsMaster() bool {
 	return sc.Client.IsMaster()
 }
+
+// Run will do all the work required to actually get the control
+// instance up and running
+func (sc *SimpleControl) Run() {
+	// Start running the client i.e. start the Stream Channel
+	// on the client.
+	sc.Client.Run()
+
+	// Start the goroutine that will take messages from the
+	// streamchannel and route it to appropriate goroutines for
+	// handling.
+	sc.StartMessageRouter()
+
+	// Start the goroutine that listens to arbitration updates
+	// and handles those updates.
+	sc.StartArbitrationUpdateListener()
+
+	// Perform arbitration
+	sc.PerformArbitration()
+}
+
+// NewControl will create a new Control instance
+func NewControl(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (Control, error) {
+	client, err := core.NewClient(addr, p4InfoPath, deviceID, electionID)
+	if err != nil {
+		return nil, err
+	}
+	digestChan := make(chan *p4V1.StreamMessageResponse_Digest, 10)
+	arbitrationChan := make(chan *p4V1.StreamMessageResponse_Arbitration)
+
+	control := SimpleControl{
+		Client:             client,
+		DigestChannel:      digestChan,
+		ArbitrationChannel: arbitrationChan,
+	}
+
+	return &control, nil
+}
