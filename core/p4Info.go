@@ -10,10 +10,6 @@ import (
 
 const invalidID = 0
 
-func getDeviceConfig(binPath string) ([]byte, error) {
-	return ioutil.ReadFile(binPath)
-}
-
 func getP4Info(p4InfoPath string) (*p4ConfigV1.P4Info, error) {
 	bytes, err := ioutil.ReadFile(p4InfoPath)
 	if err != nil {

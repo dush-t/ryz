@@ -25,7 +25,7 @@ type Client struct {
 }
 
 // Init will create a new gRPC connection and initialize the client
-func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, electionID p4V1.Uint128) error {
+func (c *Client) Init(addr string, deviceID uint64, electionID p4V1.Uint128) error {
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -39,31 +39,13 @@ func (c *Client) Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, e
 	log.Println("P4Runtime server version is", resp.P4RuntimeApiVersion)
 
 	streamMsgs := make(chan *p4V1.StreamMessageResponse, 20)
-	pushMsgs := make(chan *p4V1.StreamMessageRequest, 20)
-
-	Tables := make(map[string]entities.Entity)
-	for _, table := range p4Info.Tables {
-		t := entities.GetTable(table)
-		Tables[table.Preamble.Name] = entities.Entity(&t)
-	}
-
-	Actions := make(map[string]entities.Entity)
-	for _, action := range p4Info.Actions {
-		a := entities.GetAction(action)
-		Actions[action.Preamble.Name] = entities.Entity(&a)
-	}
-
-	Entities := make(map[entities.EntityType]*(map[string]entities.Entity))
-	Entities[entities.EntityTypes.TABLE] = &Tables
-	Entities[entities.EntityTypes.ACTION] = &Actions
+	pushMsgs := make(chan *p4V1.StreamMessageRequest)
 
 	c.P4RuntimeClient = p4RtC
 	c.deviceID = deviceID
 	c.electionID = electionID
-	c.p4Info = p4Info
 	c.IncomingMessageChannel = streamMsgs
 	c.OutgoingMessageChannel = pushMsgs
-	c.Entities = Entities
 
 	stream, streamInitErr := c.StreamChannel(context.Background())
 	if streamInitErr != nil {
@@ -95,14 +77,9 @@ func (c *Client) WriteUpdate(update *p4V1.Update) error {
 }
 
 // NewClient will create a new P4 Runtime Client
-func NewClient(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (P4RClient, error) {
-	p4Info, err := getP4Info(p4InfoPath)
-	if err != nil {
-		return nil, err
-	}
-
+func NewClient(addr string, deviceID uint64, electionID p4V1.Uint128) (P4RClient, error) {
 	client := &Client{}
-	initErr := client.Init(addr, p4Info, deviceID, electionID)
+	initErr := client.Init(addr, deviceID, electionID)
 	if initErr != nil {
 		return nil, initErr
 	}

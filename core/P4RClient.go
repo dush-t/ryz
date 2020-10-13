@@ -17,11 +17,13 @@ type EntityClient interface {
 type P4RClient interface {
 	EntityClient
 	// To initialize the client
-	Init(addr string, p4Info *p4ConfigV1.P4Info, deviceID uint64, electionID p4V1.Uint128) error
+	Init(addr string, deviceID uint64, electionID p4V1.Uint128) error
 
 	// Run will do whatever is needed to ensure that the client is active
 	// once it is initialized.
 	Run()
+
+	SetFwdPipe(binPath string, p4InfoPath string) error
 
 	// GetMessageChannels will return the message channels used by the client
 	GetMessageChannels() MessageChannels

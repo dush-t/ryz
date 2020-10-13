@@ -12,7 +12,7 @@ type TableControl struct {
 }
 
 // InsertEntryRaw is used to insert an entry into a table using raw values of match fields and params
-func (tc *TableControl) InsertEntryRaw(action string, mf []entities.Match, params [][]byte) error {
+func (tc TableControl) InsertEntryRaw(action string, mf []entities.Match, params [][]byte) error {
 	entityTypeAction := entities.EntityTypes.ACTION
 	actions := *(tc.control.Client.GetEntities(entityTypeAction))
 	actionID := actions[action].(*entities.Action).ID
@@ -25,7 +25,13 @@ func (tc *TableControl) InsertEntryRaw(action string, mf []entities.Match, param
 // be serialized from incoming json, yay!). This method will call the table's Transformer function
 // to convert the data into raw match fields and params, and will then call InsertEntryRaw with these
 // values.
-func (tc *TableControl) InsertEntry(action string, data map[string]interface{}) error {
+func (tc TableControl) InsertEntry(action string, data map[string]interface{}) error {
 	mf, params := tc.table.Transformer(data)
 	return tc.InsertEntryRaw(action, mf, params)
+}
+
+// RegisterTransformer will register a transformer function for the table managed by this
+// TableControl instance
+func (tc TableControl) RegisterTransformer(transformer entities.TableEntryTransformer) {
+	tc.table.RegisterTransformer(transformer)
 }

@@ -1,6 +1,7 @@
 package control
 
 import (
+	"errors"
 	"log"
 
 	"github.com/dush-t/ryz/core"
@@ -15,6 +16,7 @@ type SimpleControl struct {
 	Client             core.P4RClient
 	DigestChannel      chan *p4V1.StreamMessageResponse_Digest
 	ArbitrationChannel chan *p4V1.StreamMessageResponse_Arbitration
+	setupNotifChannel  chan bool
 }
 
 // StartMessageRouter will start a goroutine that takes incoming messages from the stream
@@ -53,6 +55,7 @@ func (sc *SimpleControl) Table(tableName string) TableControl {
 // We need to keep track of mastership to reason about which control can be
 // used for what.
 func (sc *SimpleControl) SetMastershipStatus(status bool) {
+	sc.setupNotifChannel <- status
 	sc.Client.SetMastershipStatus(status)
 }
 
@@ -79,21 +82,34 @@ func (sc *SimpleControl) Run() {
 
 	// Perform arbitration
 	sc.PerformArbitration()
+
+	// Wait till arbitration is complete
+	<-sc.setupNotifChannel
+}
+
+// InstallProgram will install a p4 compiled binary on a given target
+func (sc *SimpleControl) InstallProgram(binPath, p4InfoPath string) error {
+	if !sc.IsMaster() {
+		return errors.New("Control does not have mastership, cannot install program on device")
+	}
+	return sc.Client.SetFwdPipe(binPath, p4InfoPath)
 }
 
 // NewControl will create a new Control instance
-func NewControl(addr, p4InfoPath string, deviceID uint64, electionID p4V1.Uint128) (Control, error) {
-	client, err := core.NewClient(addr, p4InfoPath, deviceID, electionID)
+func NewControl(addr string, deviceID uint64, electionID p4V1.Uint128) (Control, error) {
+	client, err := core.NewClient(addr, deviceID, electionID)
 	if err != nil {
 		return nil, err
 	}
 	digestChan := make(chan *p4V1.StreamMessageResponse_Digest, 10)
 	arbitrationChan := make(chan *p4V1.StreamMessageResponse_Arbitration)
+	setupNotifChan := make(chan bool)
 
 	control := SimpleControl{
 		Client:             client,
 		DigestChannel:      digestChan,
 		ArbitrationChannel: arbitrationChan,
+		setupNotifChannel:  setupNotifChan,
 	}
 
 	return &control, nil
