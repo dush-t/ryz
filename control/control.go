@@ -51,6 +51,16 @@ func (sc *SimpleControl) Table(tableName string) TableControl {
 	}
 }
 
+func (sc *SimpleControl) Digest(digestName string) DigestControl {
+	digests := *(sc.Client.GetEntities(entities.EntityTypes.DIGEST))
+	digest := digests[digestName].(*entities.DigestEntry)
+
+	return DigestControl{
+		digest:  digest,
+		control: sc,
+	}
+}
+
 // SetMastershipStatus will call a method of the same name on P4RClient.
 // We need to keep track of mastership to reason about which control can be
 // used for what.
