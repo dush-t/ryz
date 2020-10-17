@@ -7,15 +7,17 @@ type EntityType string
 // noticed that this is not how enums are usually implemented in
 // Go, so I could be very wrong here
 type EntityTypesEnum struct {
-	TABLE  EntityType
-	DIGEST EntityType
-	ACTION EntityType
+	TABLE   EntityType
+	DIGEST  EntityType
+	ACTION  EntityType
+	COUNTER EntityType
 }
 
 // EntityTypes is the actual global variable that will be used
 // everywhere for getting Entity types
 var EntityTypes = &EntityTypesEnum{
-	TABLE:  "TABLE",
-	DIGEST: "DIGEST",
-	ACTION: "ACTION",
+	TABLE:   "TABLE",
+	DIGEST:  "DIGEST",
+	ACTION:  "ACTION",
+	COUNTER: "COUNTER",
 }

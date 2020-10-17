@@ -48,9 +48,23 @@ func (c *Client) SetFwdPipe(binPath string, p4infoPath string) error {
 		Actions[action.Preamble.Name] = entities.Entity(&a)
 	}
 
+	Digests := make(map[string]entities.Entity)
+	for _, digest := range p4Info.Digests {
+		d := entities.GetDigest(digest)
+		Digests[digest.Preamble.Name] = entities.Entity(&d)
+	}
+
+	Counters := make(map[string]entities.Entity)
+	for _, counter := range p4Info.Counters {
+		co := entities.GetCounter(counter)
+		Counters[counter.Preamble.Name] = entities.Entity(&co)
+	}
+
 	Entities := make(map[entities.EntityType]*(map[string]entities.Entity))
 	Entities[entities.EntityTypes.TABLE] = &Tables
 	Entities[entities.EntityTypes.ACTION] = &Actions
+	Entities[entities.EntityTypes.DIGEST] = &Digests
+	Entities[entities.EntityTypes.COUNTER] = &Counters
 	c.Entities = Entities
 
 	if err == nil {

@@ -7,8 +7,8 @@ import (
 // TableControl will contain all the information required
 // to do stuff with a P4 table
 type TableControl struct {
-	table   *entities.Table
 	control *SimpleControl
+	table   *entities.Table
 }
 
 // InsertEntryRaw is used to insert an entry into a table using raw values of match fields and params

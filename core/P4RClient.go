@@ -10,6 +10,13 @@ import (
 // as tables, actions, counters, etc
 type EntityClient interface {
 	GetEntities(entities.EntityType) *map[string]entities.Entity
+
+	// WriteUpdate is used to update an entity on the switch. Refer to the P4Runtime spec to know more.
+	WriteUpdate(update *p4V1.Update) error
+
+	ReadEntities(entities []*p4V1.Entity) (chan *p4V1.Entity, error)
+
+	ReadEntitiesSync(entities []*p4V1.Entity) ([]*p4V1.Entity, error)
 }
 
 // P4RClient represents a p4Runtime client. Most methods are just getters since Go's
@@ -43,7 +50,4 @@ type P4RClient interface {
 
 	// SetMastershipStatus sets the mastership status of the client
 	SetMastershipStatus(bool)
-
-	// WriteUpdate is used to update an entity on the switch. Refer to the P4Runtime spec to know more.
-	WriteUpdate(update *p4V1.Update) error
 }

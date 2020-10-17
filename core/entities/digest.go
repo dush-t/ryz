@@ -1,6 +1,7 @@
 package entities
 
 import (
+	p4ConfigV1 "github.com/p4lang/p4runtime/go/p4/config/v1"
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
@@ -70,4 +71,11 @@ func (d *DigestEntry) Type() EntityType {
 // GetID will return the ID of the DigestEntry Entity
 func (d *DigestEntry) GetID() uint32 {
 	return d.ID
+}
+
+// GetDigest will return a DigestEntry entity from a p4config digest entry
+func GetDigest(digest *p4ConfigV1.Digest) DigestEntry {
+	return DigestEntry{
+		ID: digest.Preamble.Id,
+	}
 }

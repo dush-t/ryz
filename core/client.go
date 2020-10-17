@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io"
 	"log"
 
 	"github.com/dush-t/ryz/core/entities"
@@ -74,6 +75,56 @@ func (c *Client) WriteUpdate(update *p4V1.Update) error {
 
 	_, err := c.Write(context.Background(), req)
 	return err
+}
+
+// ReadEntities will return a channel on which it will keep on sending all
+// the entities that are returned from our request. If you don't want to
+// receive these entries sequentially (through a channel) and want them all
+// at once, just use ReadEntitiesSync
+func (c *Client) ReadEntities(entities []*p4V1.Entity) (chan *p4V1.Entity, error) {
+	req := &p4V1.ReadRequest{
+		DeviceId: c.deviceID,
+		Entities: entities,
+	}
+	stream, err := c.Read(context.TODO(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	entityChannel := make(chan *p4V1.Entity)
+	go func() {
+		defer close(entityChannel)
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				break
+			}
+			for _, e := range res.Entities {
+				entityChannel <- e
+			}
+		}
+	}()
+
+	return entityChannel, nil
+}
+
+// ReadEntitiesSync will call ReadEntities, accumulate the results and return them all
+// at once. Nothing fancy here.
+func (c *Client) ReadEntitiesSync(entities []*p4V1.Entity) ([]*p4V1.Entity, error) {
+	entityChannel, err := c.ReadEntities(entities)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*p4V1.Entity, 1)
+	for e := range entityChannel {
+		result = append(result, e)
+	}
+
+	return result, nil
 }
 
 // NewClient will create a new P4 Runtime Client
