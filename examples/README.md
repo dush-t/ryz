@@ -2,6 +2,7 @@
 
 1. [Installing table entries on the switch](https://github.com/dush-t/ryz/tree/master/examples/tables1) - Tables 1
 2. [Installing table entries on a slightly more complex switch](https://github.com/dush-t/ryz/tree/master/examples/tables2) - Tables 2
+3. [Reading counter values from the control plane](https://github.com/dush-t/ryz/blob/master/examples/counters/README.md) - Counters
 
 ## How to run
 The method to run an example is the same for all examples. In these steps, I'm assuming we are trying to run the example [Tables-1](https://github.com/dush-t/ryz/tree/master/examples/tables1), which is in the directory `tables1`. Replacing this example with another, all you need to do is change the directory name (if you want to run `Tables-2`, just use the corresponding directory name `tables2`)
