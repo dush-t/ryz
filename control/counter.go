@@ -62,8 +62,11 @@ func (cc *CounterControl) ReadValues() ([]*CounterData, error) {
 		return nil, errors.New("Target counter does not have any entries")
 	}
 
-	result := make([]*CounterData, cc.counter.Size)
+	result := make([]*CounterData, 0)
 	for _, item := range res {
+		if item == nil {
+			continue
+		}
 		counterData := getCounterData(item)
 		result = append(result, &counterData)
 	}
