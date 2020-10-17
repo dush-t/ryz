@@ -51,12 +51,24 @@ func (sc *SimpleControl) Table(tableName string) TableControl {
 	}
 }
 
+// Digest will return a DigestControl struct
 func (sc *SimpleControl) Digest(digestName string) DigestControl {
 	digests := *(sc.Client.GetEntities(entities.EntityTypes.DIGEST))
 	digest := digests[digestName].(*entities.DigestEntry)
 
 	return DigestControl{
 		digest:  digest,
+		control: sc,
+	}
+}
+
+// Counter will return a CounterControl struct
+func (sc *SimpleControl) Counter(counterName string) CounterControl {
+	counters := *(sc.Client.GetEntities(entities.EntityTypes.COUNTER))
+	counter := counters[counterName].(*entities.Counter)
+
+	return CounterControl{
+		counter: counter,
 		control: sc,
 	}
 }
