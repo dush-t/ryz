@@ -7,13 +7,6 @@ import (
 	p4V1 "github.com/p4lang/p4runtime/go/p4/v1"
 )
 
-// CounterData represents a counter's value at a given index
-type CounterData struct {
-	ByteCount   int64
-	PacketCount int64
-	Index       int64
-}
-
 // CounterControl will contain all the information required
 // to do stuff with a P4 counter
 type CounterControl struct {

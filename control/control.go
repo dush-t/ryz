@@ -40,39 +40,6 @@ func (sc *SimpleControl) StartMessageRouter() {
 	}()
 }
 
-// Table will return a TableControl struct
-func (sc *SimpleControl) Table(tableName string) TableControl {
-	tables := *(sc.Client.GetEntities(entities.EntityTypes.TABLE))
-	table := tables[tableName].(*entities.Table)
-
-	return TableControl{
-		table:   table,
-		control: sc,
-	}
-}
-
-// Digest will return a DigestControl struct
-func (sc *SimpleControl) Digest(digestName string) DigestControl {
-	digests := *(sc.Client.GetEntities(entities.EntityTypes.DIGEST))
-	digest := digests[digestName].(*entities.DigestEntry)
-
-	return DigestControl{
-		digest:  digest,
-		control: sc,
-	}
-}
-
-// Counter will return a CounterControl struct
-func (sc *SimpleControl) Counter(counterName string) CounterControl {
-	counters := *(sc.Client.GetEntities(entities.EntityTypes.COUNTER))
-	counter := counters[counterName].(*entities.Counter)
-
-	return CounterControl{
-		counter: counter,
-		control: sc,
-	}
-}
-
 // SetMastershipStatus will call a method of the same name on P4RClient.
 // We need to keep track of mastership to reason about which control can be
 // used for what.
@@ -135,4 +102,55 @@ func NewControl(addr string, deviceID uint64, electionID p4V1.Uint128) (Control,
 	}
 
 	return &control, nil
+}
+
+// Table will return a TableControl struct
+func (sc *SimpleControl) Table(tableName string) TableControl {
+	tables := *(sc.Client.GetEntities(entities.EntityTypes.TABLE))
+	table := tables[tableName].(*entities.Table)
+
+	return TableControl{
+		table:   table,
+		control: sc,
+	}
+}
+
+// Digest will return a DigestControl struct
+func (sc *SimpleControl) Digest(digestName string) DigestControl {
+	digests := *(sc.Client.GetEntities(entities.EntityTypes.DIGEST))
+	digest := digests[digestName].(*entities.DigestEntry)
+
+	return DigestControl{
+		digest:  digest,
+		control: sc,
+	}
+}
+
+// Counter will return a CounterControl struct
+func (sc *SimpleControl) Counter(counterName string) CounterControl {
+	counters := *(sc.Client.GetEntities(entities.EntityTypes.COUNTER))
+	counter := counters[counterName].(*entities.Counter)
+
+	return CounterControl{
+		counter: counter,
+		control: sc,
+	}
+}
+
+// ReadAllDirectCounterValuesSync will return a list of DirectCounter values against all the entries of all the
+// tables on the device.
+func (sc *SimpleControl) ReadAllDirectCounterValuesSync() ([]*DirectCounterData, error) {
+	entity := entities.AllDirectCountersMessage()
+	entityList := []*p4V1.Entity{entity}
+
+	return getMultipleDCValuesSync(sc.Client, entityList)
+}
+
+// StreamAllDirectCounterValues does what ReadAllDirectCounterValuesSync does, except that instead of returning a list
+// of values, it returns a channel on which these values can be asynchronously sent.
+func (sc *SimpleControl) StreamAllDirectCounterValues() (chan *DirectCounterData, error) {
+	entity := entities.AllDirectCountersMessage()
+	entityList := []*p4V1.Entity{entity}
+
+	return streamMultipleDCValues(sc.Client, entityList)
 }
