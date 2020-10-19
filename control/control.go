@@ -136,21 +136,3 @@ func (sc *SimpleControl) Counter(counterName string) CounterControl {
 		control: sc,
 	}
 }
-
-// ReadAllDirectCounterValuesSync will return a list of DirectCounter values against all the entries of all the
-// tables on the device.
-func (sc *SimpleControl) ReadAllDirectCounterValuesSync() ([]*DirectCounterData, error) {
-	entity := entities.AllDirectCountersMessage()
-	entityList := []*p4V1.Entity{entity}
-
-	return getMultipleDCValuesSync(sc.Client, entityList)
-}
-
-// StreamAllDirectCounterValues does what ReadAllDirectCounterValuesSync does, except that instead of returning a list
-// of values, it returns a channel on which these values can be asynchronously sent.
-func (sc *SimpleControl) StreamAllDirectCounterValues() (chan *DirectCounterData, error) {
-	entity := entities.AllDirectCountersMessage()
-	entityList := []*p4V1.Entity{entity}
-
-	return streamMultipleDCValues(sc.Client, entityList)
-}

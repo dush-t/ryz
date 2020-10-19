@@ -20,7 +20,7 @@ func getP4Info(p4InfoPath string) (*p4ConfigV1.P4Info, error) {
 	if err = proto.UnmarshalText(string(bytes), p4Info); err != nil {
 		return nil, err
 	}
-
+	
 	return p4Info, nil
 }
 

@@ -55,7 +55,7 @@ func streamMultipleDCValues(c core.P4RClient, req []*p4V1.Entity) (chan *DirectC
 }
 
 // ReadDirectCounterValueOnEntry will read the value of the DirectCounter against an entry in the table
-func (tc TableControl) ReadDirectCounterValueOnEntry(matches []entities.Match) (*CounterData, error) {
+func (tc TableControl) ReadDirectCounterValueOnEntry(matches []entities.Match) (*DirectCounterData, error) {
 	entity := tc.table.DirectCounterForTableEntryMessage(matches)
 	entityList := []*p4V1.Entity{entity}
 
@@ -66,8 +66,8 @@ func (tc TableControl) ReadDirectCounterValueOnEntry(matches []entities.Match) (
 	if len(res) == 0 {
 		return nil, errors.New("No counter entries found")
 	}
-
-	result := getCounterData(res[0])
+	// Why is the value in res[1] instead of res[0]? I have no clue
+	result := getDirectCounterData(res[1])
 	return &result, nil
 }
 
