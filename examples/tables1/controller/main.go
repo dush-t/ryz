@@ -39,8 +39,6 @@ func main() {
 	switchControl.Table("ingress.ipv4_lpm").RegisterTransformer(ipv4LpmTransform)
 
 	// Populating tables with entries
-	// Yikes
-
 	ipv4Data1 := map[string]interface{}{
 		"ip":   string("10.0.0.10"),
 		"port": uint32(1),
